@@ -16,7 +16,8 @@ Request.get(db, function(err, req, body) {
       process.exit(0);
     }
     if (change.doc.name) {
-      console.log(Normalize(change.doc));
+      normalized = Normalize(change.doc);
+      console.log({ "name" : normalized.name, "changed": normalized.time});
     }
   });
 });
