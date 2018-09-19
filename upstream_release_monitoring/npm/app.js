@@ -12,9 +12,9 @@ var changes = new ChangesStream({
 Request.get(db, function(err, req, body) {
   var end_sequence = JSON.parse(body).update_seq;
   changes.on('data', function(change) {
-    if (change.seq >= end_sequence) {
-      process.exit(0);
-    }
+    //if (change.seq >= end_sequence) {
+    //  process.exit(0);
+    //}
     if (change.doc.name) {
       normalized = Normalize(change.doc);
       console.log({ "name" : normalized.name, "changed": normalized.time});
