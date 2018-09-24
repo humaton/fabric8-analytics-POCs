@@ -4,7 +4,6 @@
 import requests
 import sys
 import json
-from json.decoder import JSONDecodeError
 from requests.exceptions import HTTPError, Timeout
 from bs4 import BeautifulSoup
 
@@ -42,10 +41,8 @@ def printResults(resData):
             except Timeout as err:
                 print("Request timed out: {0}".format(err))      
             print(verPack)       
-    except JSONDecodeError as err:
-        print("Whoops, JSON Decoding error:")
-        print(err.msg)
-        print(err.lineno, err.colno)
+    except ValueError as err:
+        print("Whoops, JSON Decoding error:"+ err)
     
     
 

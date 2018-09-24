@@ -4,7 +4,6 @@
 import requests
 import sys
 import json
-from json.decoder import JSONDecodeError
 from requests.exceptions import HTTPError, Timeout
 
 def main():
@@ -25,10 +24,8 @@ def printResults(resData):
     try:
         dataobj = resData.json()
         print(dataobj['info']['version'])
-    except JSONDecodeError as err:
-        print("Whoops, JSON Decoding error:")
-        print(err.msg)
-        print(err.lineno, err.colno)
+    except ValueError as err:
+        print("Whoops, JSON Decoding error:"+err)
     
 
 if __name__ == "__main__":
