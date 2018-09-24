@@ -16,5 +16,4 @@ WORKDIR /home/release_monitor/
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install -r /home/release_monitor/requirements.txt
 
-
 CMD python3 pypi_release_monitor_all.py

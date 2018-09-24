@@ -6,3 +6,9 @@
 #
 beautifulsoup4==4.6.3     # via bs4
 bs4==0.0.1
+certifi==2018.8.24        # via requests
+chardet==3.0.4            # via requests
+idna==2.7                 # via requests
+lxml==4.2.5
+requests==2.19.1
+urllib3==1.23             # via requests
