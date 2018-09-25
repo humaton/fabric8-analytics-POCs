@@ -7,11 +7,32 @@ import feedparser
 import requests
 import signal
 import time
-from f8a_worker.setup_celery import init_celery, init_selinon
-from selinon import run_flow
+import psutil
+#from f8a_worker.setup_celery import init_celery, init_selinon
+#from selinon import run_flow
 
 from defaults import NPM_URL, PYPI_URL, ENABLE_SCHEDULING, \
     SCHEDULED_NPM_PACKAGES, SCHEDULED_PYPI_PACKAGES, PROBE_FILE_LOCATION
+
+logger = logging.getLogger(__name__)
+
+
+def handler(signum, frame):
+    logger.debug("Running Liveness Probe")
+    if ENABLE_SCHEDULING:
+        run_flow('livenessFlow', [None])
+    else:
+        logger.debug("Liveness probe - livenessFlow"
+                       " did not run since selinon is not initialized")
+
+    basedir = os.path.dirname(PROBE_FILE_LOCATION)
+    if not os.path.exists(basedir):
+        os.makedirs(basedir)
+
+    with open(PROBE_FILE_LOCATION, 'a'):
+        os.utime(PROBE_FILE_LOCATION, None)
+
+    logger.debug("Liveness probe - finished")
 
 
 def run_liveness():
@@ -47,7 +68,11 @@ def was_package_processed(ecosystem, name, version):
     return False
 
 
-class ReleaseMnitor():
+def not_in_previous_set():
+    return True
+
+
+class ReleaseMonitor():
     """Class which check rss feeds for new releases"""
 
     def __init__(self):
@@ -86,14 +111,17 @@ class ReleaseMnitor():
         feed_pypi = feedparser.parse(PYPI_URL + "rss/updates.xml")
         feed_npm = feedparser.parse(NPM_URL + "-/rss")
 
+        signal.signal(signal.SIGUSR1, handler)
+        self.log.info("Registered signal handler for liveness probe")
+
         while True:
             for i in feed_npm.entries:
                 package_name = i['title']
                 package_url = NPM_URL + "-/package/{package_name}/dist-tags".format(package_name=package_name)
                 package_latest_version = json.loads(
-                    requests.get(package_url, headers={'content-type': 'application/json'}).text).get('latest')
-                self.log.info("Received event for npm: '%s':'%s'", package_name, package_latest_version)
-                if ENABLE_SCHEDULING:
+                    requests.get(package_url, headers={'content-type': 'application/json'}).text)
+                self.log.info("Processing package from npm: '%s':'%s'", package_name, package_latest_version.get('latest'))
+                if ENABLE_SCHEDULING and not_in_previous_set():
                     # self.run_package_analisys(package_name, 'npm', package_latest_version)
                     print({'package_name': package_name,
                            'latest_version': package_latest_version
@@ -101,9 +129,14 @@ class ReleaseMnitor():
 
             for i in feed_pypi.entries:
                 package_name, package_latest_version = i['title'].split(' ')
-                self.log.info("Received event for npm: '%s':'%s'", package_name, package_latest_version)
+                self.log.info("Processing package from pypi: '%s':'%s'", package_name, package_latest_version)
                 if ENABLE_SCHEDULING:
                     # self.run_package_analisys(package_name, 'pypi', package_latest_version)
                     print({'package_name': package_name,
                            'latest_version': package_latest_version
                            })
+
+
+if __name__ == '__main__':
+    monitor = ReleaseMonitor()
+    monitor.run()

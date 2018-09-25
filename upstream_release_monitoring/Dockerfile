@@ -4,6 +4,8 @@ MAINTAINER Tomas Hrcka <thrcka@redhat.com>
 ENV LANG=en_US.UTF-8 \
     F8A_WORKER_VERSION=30100bf
 
+RUN useradd coreapi
+
 RUN yum --setopt=tsflags=nodocs install -y epel-release && \
     yum --setopt=tsflags=nodocs install -y python34-pip git wget python34-devel libxml2-devel libxslt-devel python34-requests python34-pycurl && \
     yum clean all
@@ -14,8 +16,12 @@ COPY . /home/release_monitor/
 
 WORKDIR /home/release_monitor/
 
+COPY hack/run_release_monitor.sh /usr/bin/
+
 RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install -r /home/release_monitor/requirements.txt && \
     pip3 install git+https://github.com/fabric8-analytics/fabric8-analytics-worker.git@${F8A_WORKER_VERSION}
 
-CMD python3 release_monitoring.py
+USER coreapi
+
+CMD ["/usr/bin/run_release_monitor.sh"]
