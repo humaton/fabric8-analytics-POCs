@@ -18,4 +18,4 @@ RUN pip3 install --upgrade pip && pip install --upgrade wheel && \
     pip3 install -r /home/release_monitor/requirements.txt && \
     pip3 install git+https://github.com/fabric8-analytics/fabric8-analytics-worker.git@${F8A_WORKER_VERSION}
 
-CMD python3 pypi_release_monitoring.py
+CMD python3 release_monitoring.py
