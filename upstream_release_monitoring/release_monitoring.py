@@ -11,6 +11,25 @@ from defaults import NPM_URL, PYPI_URL, ENABLE_SCHEDULING, \
     SCHEDULED_NPM_PACKAGES, SCHEDULED_PYPI_PACKAGES
 
 
+def write_package_info_to_file(node_args, file_path):
+    with open(file_path, "a+") as f:
+        f.write(node_args)
+    return True
+
+
+def get_correct_ecosystem_filepath(ecosystem):
+    if ecosystem == 'npm':
+        return SCHEDULED_NPM_PACKAGES
+    if ecosystem == 'pypi':
+        return SCHEDULED_PYPI_PACKAGES
+
+
+def was_package_processed(ecosystem, name, version):
+    ecosystem_file = get_correct_ecosystem_filepath(ecosystem)
+    with open(ecosystem_file, "r") as f:
+        print(f.readlines())
+
+
 class ReleaseMnitor():
     """Class which check rss feeds for new releases"""
 
@@ -25,17 +44,6 @@ class ReleaseMnitor():
         if ENABLE_SCHEDULING:
             init_celery(result_backend=False)
             init_selinon()
-
-    def write_package_info_to_file(self, node_args, file_path):
-        with open(file_path, "a+") as f:
-            f.write(node_args)
-        return True
-
-    def get_correct_ecosystem_filepath(self, ecosystem):
-        if ecosystem == 'npm':
-            return SCHEDULED_NPM_PACKAGES
-        if ecosystem == 'pypi':
-            return SCHEDULED_PYPI_PACKAGES
 
     def run_package_analisys(self, name, ecosystem, version):
         """Run Selinon flow for analyses.
@@ -52,7 +60,7 @@ class ReleaseMnitor():
             'recursive_limit': 0
         }
 
-        self.write_package_info_to_file(node_args, self.get_correct_ecosystem_filepath(ecosystem))
+        write_package_info_to_file(node_args, get_correct_ecosystem_filepath(ecosystem))
         self.log.info("Scheduling Selinon flow '%s' with node_args: '%s'", 'bayesianFlow', node_args)
         return run_flow('bayesianFlow', node_args)
 
